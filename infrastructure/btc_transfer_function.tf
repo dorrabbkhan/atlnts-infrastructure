@@ -10,6 +10,24 @@ resource "google_storage_bucket" "function_storage" {
 
 }
 
+resource "google_storage_bucket" "images_storage" {
+  name = "lighthouse-images-storage"
+  location="EU"
+}
+
+data "google_iam_policy" "viewer" {
+  binding {
+    role = "roles/storage.objectViewer"
+    members = [
+        "allUsers",
+    ] 
+  }
+}
+
+resource "google_storage_bucket_iam_policy" "editor" {
+  bucket = "${google_storage_bucket.images_storage.name}"
+  policy_data = "${data.google_iam_policy.viewer.policy_data}"
+}
 resource "google_storage_bucket_object" "btc_transfer_zip" {
   # Append file MD5 to force bucket to be recreated
   name   = "btrans_source.zip#${data.archive_file.btc_transfer.output_md5}"

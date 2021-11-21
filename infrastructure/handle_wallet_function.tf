@@ -6,7 +6,7 @@ data "archive_file" "handle_wallet" {
 
 resource "google_storage_bucket_object" "wallet_zip" {
   # Append file MD5 to force bucket to be recreated
-  name   = "handlew_source.zip#${data.archive_file.btc_transfer.output_md5}"
+  name   = "handlew_source.zip#${data.archive_file.handle_wallet.output_md5}"
   bucket = google_storage_bucket.function_storage.name
   source = data.archive_file.handle_wallet.output_path
 }

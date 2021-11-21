@@ -34,8 +34,3 @@ resource "google_compute_instance" "backend-api" {
     }
   }
 }
-
-resource "google_app_engine_application" "app" {
-  project     = "nifty-saga-332620"
-  location_id = "europe-west3"
-}

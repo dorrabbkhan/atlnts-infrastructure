@@ -6,7 +6,7 @@ data "archive_file" "send_found_notifications" {
 
 resource "google_storage_bucket_object" "notifications_zip" {
   # Append file MD5 to force bucket to be recreated
-  name   = "sendn_source.zip#${data.archive_file.btc_transfer.output_md5}"
+  name   = "sendn_source.zip#${data.archive_file.send_found_notifications.output_md5}"
   bucket = google_storage_bucket.function_storage.name
   source = data.archive_file.send_found_notifications.output_path
 }
