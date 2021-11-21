@@ -3,7 +3,7 @@ from trycourier import Courier
 import os
 import sqlalchemy
 
-def add_to_transactions_db(email_from, email_to):
+def add_to_transactions_db(email_from, email_to, amount):
     pool = sqlalchemy.create_engine(
             "mysql+pymysql://root:plschangeme@34.159.117.11:3306/lighthouse"
         )
@@ -12,8 +12,10 @@ def add_to_transactions_db(email_from, email_to):
         try:
             from_secret = conn.execute(f"SELECT secret FROM credentials WHERE email=\"{email_from}\"").all()[0][0]
             to_wallet = conn.execute(f"SELECT wallet FROM credentials WHERE email=\"{email_to}\"").all()[0][0]
-            conn.execute("CREATE TABLE IF NOT EXISTS transactions (id VARCHAR(255) NOT NULL, from_secret VARCHAR(255) NOT NULL, to_wallet VARCHAR(255) NOT NULL, PRIMARY KEY(id))")
-            conn.execute(f"INSERT INTO transactions (id, from_secret, to_wallet) VALUES (uuid(), \"{from_secret}\", \"{to_wallet}\")")
+            conn.execute("CREATE TABLE IF NOT EXISTS transactions (id VARCHAR(255) NOT NULL, from_secret VARCHAR(255) NOT NULL, to_wallet VARCHAR(255) NOT NULL, amount DOUBLE NOT NULL, PRIMARY KEY(id))")
+            conn.execute(f"INSERT INTO transactions (id, from_secret, to_wallet, amount) VALUES (uuid(), \"{from_secret}\", \"{to_wallet}\", {amount})")
+            uuid = conn.execute(f"SELECT id FROM transactions WHERE from_secret=\"{from_secret}\"").all()[0][0]
+            return uuid
         except Exception as e:
             return f"Error working with the database: {e}", 500
 
@@ -39,6 +41,8 @@ def hello_world(request):
         request_json['finder_name'] and request_json['finder_phone'] and request_json['finder_email'] and \
             request_json['item'] and request_json['amount']:
 
+        uuid = add_to_transactions_db(request_json['email'], request_json['finder_email'], request_json['amount'])
+
         client = Client(twilio_sid, twilio_auth_token) 
         email_client = Courier(auth_token=email_auth_token)
 
@@ -56,12 +60,13 @@ def hello_world(request):
             "finder_name": request_json['finder_name'],
             "finder_email": request_json['finder_email'],
             "finder_phone": request_json['finder_phone'],
+            "link": f""
         },
         )
 
         message = client.messages.create(  
                                     messaging_service_sid=twilio_msg_sid, 
-                                    body=f"Hello {request_json['name']}, your item {request_json['item']} has been found. Contact your finder here: \n{request_json['finder_name']}\n{request_json['finder_email']}\n{request_json['finder_phone']}",      
+                                    body=f"Hello {request_json['name']}, your item {request_json['item']} has been found. Contact your finder here: \n{request_json['finder_name']}\n{request_json['finder_email']}\n{request_json['finder_phone']}\nYou will be charged {request_json['amount']} BTC. Please check your email to confirm te transaction.",      
                                     to=request_json['phone'] 
                                 ) 
         
@@ -76,4 +81,4 @@ def hello_world(request):
 
 
 if __name__ == "__main__":
-    add_to_transactions_db("dorrabbk@gmail.com", "dorrabbk@gmail.com")
+    add_to_transactions_db("dorrabbk@gmail.com", "dorrabbk@gmail.com", "0.0012")

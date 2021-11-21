@@ -11,7 +11,7 @@ def hello_world(request):
         `make_response <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>`.
     """
     request_json = request.get_json()
-    if request_json and 'from' in request_json and 'to' in request_json and 'amount' in request_json:
+    if request_json and request_json['from'] and request_json['to'] and request_json['amount']:
         from_wif = request_json['from']
         to_addr = request_json['to']
         amount_usd = request_json['amount']
