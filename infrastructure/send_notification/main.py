@@ -1,6 +1,21 @@
 from twilio.rest import Client
 from trycourier import Courier
 import os
+import sqlalchemy
+
+def add_to_transactions_db(email_from, email_to):
+    pool = sqlalchemy.create_engine(
+            "mysql+pymysql://root:plschangeme@34.159.117.11:3306/lighthouse"
+        )
+
+    with pool.connect() as conn:
+        try:
+            from_secret = conn.execute(f"SELECT secret FROM credentials WHERE email=\"{email_from}\"").all()[0][0]
+            to_wallet = conn.execute(f"SELECT wallet FROM credentials WHERE email=\"{email_to}\"").all()[0][0]
+            conn.execute("CREATE TABLE IF NOT EXISTS transactions (id VARCHAR(255) NOT NULL, from_secret VARCHAR(255) NOT NULL, to_wallet VARCHAR(255) NOT NULL, PRIMARY KEY(id))")
+            conn.execute(f"INSERT INTO transactions (id, from_secret, to_wallet) VALUES (uuid(), \"{from_secret}\", \"{to_wallet}\")")
+        except Exception as e:
+            return f"Error working with the database: {e}", 500
 
 def hello_world(request):
     """Responds to any HTTP request.
@@ -60,3 +75,5 @@ def hello_world(request):
         return "Invalid request", 400
 
 
+if __name__ == "__main__":
+    add_to_transactions_db("dorrabbk@gmail.com", "dorrabbk@gmail.com")
